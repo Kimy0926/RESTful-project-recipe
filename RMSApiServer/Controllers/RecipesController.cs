@@ -133,7 +133,7 @@ namespace RMSApiServer.Controllers
 			return Ok(recipeDTO);
         }
 
-		// POST: api/Recipes
+		// POST: api/recipes
 		[HttpPost]
 		public async Task<ActionResult<string>> PostRecipe(RecipeCreateDTO recipeDTO)
 		{
@@ -153,6 +153,61 @@ namespace RMSApiServer.Controllers
 			await _context.SaveChangesAsync();
 
 			return Ok(recipe.RecipeId);
+        }
+
+        // POST: api/recipes/mapping
+        [HttpPost("mapping")]
+        public async Task<ActionResult<string>> PostMapping(List<RecipeMappingDTO> mappingDTO)
+        {
+            var currentMappingList = await _context.EquipmentRecipeMap
+                .ToListAsync();
+
+            var newMappingList = mappingDTO
+                .Where(dto => !currentMappingList
+                .Any(map => map.RecipeId == dto.RecipeId &&
+                            map.EquipmentId == dto.EquipmentId &&
+                            map.SiteId == dto.SiteId))
+                .ToList();
+
+            var MappingToRemove = currentMappingList
+                .Where(map => !mappingDTO
+                .Any(dto => dto.RecipeId == map.RecipeId &&
+                            dto.EquipmentId == map.EquipmentId &&
+                            dto.SiteId == map.SiteId))
+                .ToList();
+
+            if (newMappingList.Count > 0)
+            {
+                foreach (var mappingObj in newMappingList)
+                {
+                    var equipmentRecipeMap = new EquipmentRecipeMap
+                    {
+                        SiteId = mappingObj.SiteId,
+                        RecipeId = mappingObj.RecipeId,
+                        EquipmentId = mappingObj.EquipmentId,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    _context.EquipmentRecipeMap.Add(equipmentRecipeMap);
+                }
+            }
+
+            if (MappingToRemove.Count > 0)
+            {
+                foreach (var mappingObj in MappingToRemove)
+                {
+                    _context.EquipmentRecipeMap.Remove(mappingObj);
+                }
+            }
+
+            if (newMappingList.Any() || MappingToRemove.Any())
+            { 
+                await _context.SaveChangesAsync();
+            }
+                
+
+            return Ok();
         }
 
         [HttpPut("update/{recipeId}")]

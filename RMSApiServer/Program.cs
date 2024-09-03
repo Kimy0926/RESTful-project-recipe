@@ -52,7 +52,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigins", builder =>
     {
-        builder.WithOrigins("https://kimmy-prj-demo.click", "https://www.kimmy-prj-demo.click")
+        builder.WithOrigins("https://kimmy-prj-demo.click", "https://www.kimmy-prj-demo.click", "http://localhost:3000")
                .AllowAnyHeader()
                .AllowAnyMethod();
     });
